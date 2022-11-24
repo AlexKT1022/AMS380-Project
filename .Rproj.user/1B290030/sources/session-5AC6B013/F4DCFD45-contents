@@ -1,0 +1,81 @@
+---
+title: "AMS394 Project"
+author: "Alex Takamizawa"
+format: html
+editor: visual
+---
+
+## Setup
+
+-   `data1`:
+
+-   `data2`:
+
+-   `data3`:
+
+-   `data4`:
+
+```{r}
+
+```
+
+## Partially-Matched Samples Data Structure
+
+## Statistical Analysis Methods for Partially-Matched Samples
+
+### Kim et al.'s Modified t-Statistic
+
+```{r}
+kim_t_test <- function() {
+  
+}
+```
+
+### Looney and Jones' Corrected Z-Test
+
+```{r}
+
+```
+
+## The Actual Function
+
+```{r}
+#' 
+compare_means <- function(data1, data2, independent = FALSE, alpha = 0.05) {
+  if (missing(data2)) {
+    # 1-sample tests
+  } else {
+    # 2-sample tests
+  }
+}
+
+one_sample_test <- function(data, alpha = 0.05) {
+  if (shapiro.test(data)$p.value >= alpha) {
+      # data is normally-distributed
+      t.test(data, conf.level = 1 - alpha)
+    } else {
+      # data is not normally-distributed
+      wilcox.test(data, conf.level = 1 - alpha)
+    }
+}
+
+two_sample_test <- function(data1, data2, independent = FALSE, alpha = 0.05) {
+  if (independent) {
+      # samples are independent
+      if (shapiro.test(data1)$p.value >= alpha & shapiro.test(data2)$p.value >= alpha) {
+        # data is normally-distributed
+        if (var.test(data1, data2, conf.level = 1 - alpha)$p.value < alpha) {
+          # sample variances are equal
+          t.test(data1, data2, mu = 0, var.equal = TRUE, conf.level = 1 - alpha)
+        } else {
+          # sample variances are not equal
+          t.test(data1, data2, mu = 0, conf.level = 1 - alpha)
+        }
+      } else {
+        # data is not normally-distributed
+      }
+    } else {
+      # samples are not independent
+    }
+}
+```

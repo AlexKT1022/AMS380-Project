@@ -1,0 +1,7 @@
+"0","pred_classes <- model %>% predict(test)"
+"0",""
+"0","mean(pred_classes == test$family)"
+"1","[1]"
+"1"," 0.6731735"
+"1","
+"

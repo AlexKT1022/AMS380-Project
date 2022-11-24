@@ -1,0 +1,2 @@
+"0","model <- nnet::multinom(species ~ ., data = train, MaxNWts = 2000) %>%"
+"0","  stepAIC(direction = ""backward"", trace = FALSE)"

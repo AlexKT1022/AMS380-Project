@@ -1,0 +1,3 @@
+"0","train_idx <- bird_collisions$family %>% createDataPartition(p = 0.8, list = FALSE)"
+"0","train <- bird_collisions[train_idx, ]"
+"0","test <- bird_collisions[-train_idx, ]"

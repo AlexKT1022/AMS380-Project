@@ -1,0 +1,22 @@
+"0","#| output: false"
+"0","install.packages(c(""caret"", ""MASS"", ""nnet"", ""tidyverse""))"
+"1","Installing MASS [7.3-58.1] ...
+"
+"1","	OK [linked cache]
+"
+"1","Installing nnet [7.3-18] ...
+"
+"1","	OK [linked cache]
+"
+"1","Installing caret [6.0-93] ...
+"
+"1","	OK [linked cache]
+"
+"1","Installing tidyverse [1.3.2] ...
+"
+"1","	OK [linked cache]
+"
+"0","library(caret)"
+"0","library(MASS)"
+"0","library(nnet)"
+"0","library(tidyverse)"

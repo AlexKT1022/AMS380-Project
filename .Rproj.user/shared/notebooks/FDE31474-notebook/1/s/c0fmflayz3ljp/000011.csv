@@ -1,0 +1,4 @@
+"0","bird_collisions <- read.csv(""data/bird_collisions.csv"") %>%"
+"0","  select(-c(""genus"", ""species"")) %>%"
+"0","  subset(family != ""Laniidae"")"
+"0","bird_collisions$date <- time2season(as.Date(bird_collisions$date), out.fmt = ""seasons"")"

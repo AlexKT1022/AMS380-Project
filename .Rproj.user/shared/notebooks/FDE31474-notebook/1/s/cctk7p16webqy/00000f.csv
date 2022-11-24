@@ -1,0 +1,3 @@
+"0","# train_idx <- iris$Species %>% createDataPartition(p = 0.8, list = FALSE)"
+"0","# train <- iris[train_idx, ]"
+"0","# test <- iris[-train_idx, ]"

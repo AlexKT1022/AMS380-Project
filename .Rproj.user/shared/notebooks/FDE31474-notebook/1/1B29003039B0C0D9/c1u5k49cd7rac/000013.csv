@@ -1,0 +1,4 @@
+"0","train_idx <- bird_collisions$species %>% createDataPartition(p = 0.8, list = FALSE)"
+"2","Warning: Some classes have a single record ( excubitor ) and these will be selected for the sample"
+"0","train <- bird_collisions[train_idx, ]"
+"0","test <- bird_collisions[-train_idx, ]"
