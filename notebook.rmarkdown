@@ -5,9 +5,11 @@ format: html
 editor: visual
 ---
 
+
 ## Setup
 
 ### Loading Packages
+
 
 ```{r}
 #| output: false
@@ -20,7 +22,9 @@ library(nnet)
 library(tidyverse)
 ```
 
+
 ### Loading and Preparing Data
+
 
 ```{r}
 bird_collisions <- read.csv("data/bird_collisions.csv") %>%
@@ -34,15 +38,19 @@ bird_collisions$family <- ifelse(
 )
 ```
 
+
 ### Setting Seed
+
 
 ```{r}
 set.seed(123)
 ```
 
+
 ## Multinomial Logistic Regression
 
 ### Partitioning Data
+
 
 ```{r}
 train_idx <- bird_collisions$family %>% createDataPartition(p = 0.80, list = FALSE)
@@ -50,7 +58,9 @@ train <- bird_collisions[train_idx, ]
 test <- bird_collisions[-train_idx, ]
 ```
 
+
 ### Fitting the Model
+
 
 ```{r}
 #| output: false
@@ -60,10 +70,13 @@ model <- nnet::multinom(family ~ ., data = train) %>%
 summary(model)
 ```
 
+
 ### Evaluating the Model
+
 
 ```{r}
 pred_classes <- model %>% predict(test)
 
 mean(pred_classes == test$family)
 ```
+
