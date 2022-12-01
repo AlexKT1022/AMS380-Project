@@ -73,3 +73,9 @@ mean(pred_classes == test$family)
 ```
 
 ## Poisson Regression
+
+### Fitting the Model
+
+```{r}
+
+```
