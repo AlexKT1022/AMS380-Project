@@ -149,73 +149,81 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>bird_collisions <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/bird_collisions.csv"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(<span class="st">"genus"</span>, <span class="st">"species"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">subset</span>(family <span class="sc">!=</span> <span class="st">"Laniidae"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>bird_collisions<span class="sc">$</span>date <span class="ot">&lt;-</span> <span class="fu">time2season</span>(<span class="fu">as.Date</span>(bird_collisions<span class="sc">$</span>date), <span class="at">out.fmt =</span> <span class="st">"seasons"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>bird_collisions<span class="sc">$</span>date <span class="ot">&lt;-</span> <span class="fu">time2season</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(bird_collisions<span class="sc">$</span>date), </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">out.fmt =</span> <span class="st">"seasons"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>bird_collisions<span class="sc">$</span>family <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  bird_collisions<span class="sc">$</span>family <span class="sc">==</span> <span class="st">"Icteriidae"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Icteridae"</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  bird_collisions<span class="sc">$</span>family</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="setting-seed" class="level3">
-<h3 class="anchored" data-anchor-id="setting-seed">Setting Seed</h3>
+<section id="partitioning-data" class="level3">
+<h3 class="anchored" data-anchor-id="partitioning-data">Partitioning Data</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> bird_collisions<span class="sc">$</span>family <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">createDataPartition</span>(<span class="at">p =</span> <span class="fl">0.80</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> bird_collisions[train_idx, ]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> bird_collisions[<span class="sc">-</span>train_idx, ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
 <section id="multinomial-logistic-regression" class="level2">
 <h2 class="anchored" data-anchor-id="multinomial-logistic-regression">Multinomial Logistic Regression</h2>
-<section id="partitioning-data" class="level3">
-<h3 class="anchored" data-anchor-id="partitioning-data">Partitioning Data</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> bird_collisions<span class="sc">$</span>family <span class="sc">%&gt;%</span> <span class="fu">createDataPartition</span>(<span class="at">p =</span> <span class="fl">0.8</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> bird_collisions[train_idx, ]</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> bird_collisions[<span class="sc">-</span>train_idx, ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
 <section id="fitting-the-model" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-the-model">Fitting the Model</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> nnet<span class="sc">::</span><span class="fu">multinom</span>(family <span class="sc">~</span> ., <span class="at">data =</span> train) <span class="sc">%&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stepAIC</span>(<span class="at">direction =</span> <span class="st">"backward"</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> nnet<span class="sc">::</span><span class="fu">multinom</span>(family <span class="sc">~</span> ., <span class="at">data =</span> train) <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stepAIC</span>(<span class="at">direction =</span> <span class="st">"backward"</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="lorem-ipsum" class="level3">
+<h3 class="anchored" data-anchor-id="lorem-ipsum">Lorem Ipsum</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              (Intercept) datespring  datesummer localityMP flight_callRare
+Certhiidae       17.69053 -2.4454142  -3.6969203 -1.9919814       25.996196
+Icteridae        56.54277  1.6487410   3.7008374 -1.1604668       -7.697444
+Mimidae          61.55453  0.8893225   6.6529559 -1.7813311      -27.689249
+Parulidae       -20.57976 -2.4794107   1.3554990 -0.3574346      -11.742140
+Passerellidae    53.64692 -2.7132454  -3.7851313  0.1185971       49.567781
+Polioptilidae    48.93122  4.7419984 -12.7531703 -1.1253376        3.128227
+Regulidae        42.99582 -2.6965407 -12.8016559 -1.7094047      -19.058272
+Sittidae        -21.71787 -4.1308298   0.1420835 -1.8864120       11.901170
+Troglodytidae    59.25563  1.5332327 -10.9675306 -2.2939510       -8.392971
+Turdidae         44.97300 -2.8433593   0.3449326  0.4386810       20.687222
+Tyrannidae       50.59433 -1.2542606   1.5191601 -0.4650264       -8.940816
+Vireonidae       47.63114 -2.4470519  -0.4428209 -2.5026320      -20.851306
+              flight_callYes habitatForest habitatOpen stratumUpper
+Certhiidae         -39.38538    25.3650771   15.565161   -0.3483211
+Icteridae          -45.61903   -12.0771266   14.569663  -14.0186503
+Mimidae            -56.24666     1.7880076   -1.033883  -29.3748354
+Parulidae           45.55084     0.7944205    8.251430  -21.9528481
+Passerellidae      -26.33396    -1.0558714    6.962749  -62.0539733
+Polioptilidae      -55.16739    10.9497951   16.790235  -19.0143684
+Regulidae          -49.22248    15.6403371   25.815123   -7.0419437
+Sittidae            12.09267    18.6945431    5.901409   -7.9284638
+Troglodytidae      -80.07231    26.0902271   24.444001  -61.2735567
+Turdidae           -46.58413    27.5115347   11.406144  -45.2394038
+Tyrannidae         -65.05271    -4.5942163   20.663945    3.2206542
+Vireonidae         -61.74092    19.2416838   21.221613  -16.1282066</code></pre>
+</div>
 </div>
 </section>
 <section id="evaluating-the-model" class="level3">
 <h3 class="anchored" data-anchor-id="evaluating-the-model">Evaluating the Model</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pred_classes <span class="ot">&lt;-</span> model <span class="sc">%&gt;%</span> <span class="fu">predict</span>(test)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(pred_classes <span class="sc">==</span> test<span class="sc">$</span>family)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pred_classes <span class="ot">&lt;-</span> model <span class="sc">%&gt;%</span> <span class="fu">predict</span>(test)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(pred_classes <span class="sc">==</span> test<span class="sc">$</span>family)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.6731735</code></pre>
+<pre><code>[1] 0.6740347</code></pre>
 </div>
-</div>
-</section>
-</section>
-<section id="ordinal-logistic-regression" class="level2">
-<h2 class="anchored" data-anchor-id="ordinal-logistic-regression">Ordinal Logistic Regression</h2>
-<section id="preparing-data" class="level3">
-<h3 class="anchored" data-anchor-id="preparing-data">Preparing Data</h3>
-<div class="cell">
-
-</div>
-</section>
-<section id="partitioning-data-1" class="level3">
-<h3 class="anchored" data-anchor-id="partitioning-data-1">Partitioning Data</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># train_idx &lt;- iris$Species %&gt;% createDataPartition(p = 0.8, list = FALSE)</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># train &lt;- iris[train_idx, ]</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># test &lt;- iris[-train_idx, ]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="fitting-the-model-1" class="level3">
-<h3 class="anchored" data-anchor-id="fitting-the-model-1">Fitting the Model</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># model_ordinal &lt;- polr(Species ~ ., data = iris, Hess = TRUE)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="evaluating-the-model-1" class="level3">
-<h3 class="anchored" data-anchor-id="evaluating-the-model-1">Evaluating the Model</h3>
-<div class="cell">
-
 </div>
 </section>
 </section>

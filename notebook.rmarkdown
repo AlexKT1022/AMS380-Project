@@ -30,7 +30,10 @@ library(tidyverse)
 bird_collisions <- read.csv("data/bird_collisions.csv") %>%
   select(-c("genus", "species")) %>%
   subset(family != "Laniidae")
-bird_collisions$date <- time2season(as.Date(bird_collisions$date), out.fmt = "seasons")
+bird_collisions$date <- time2season(
+  as.Date(bird_collisions$date), 
+  out.fmt = "seasons"
+)
 bird_collisions$family <- ifelse(
   bird_collisions$family == "Icteriidae",
   "Icteridae",
@@ -39,25 +42,20 @@ bird_collisions$family <- ifelse(
 ```
 
 
-### Setting Seed
-
-
-```{r}
-set.seed(123)
-```
-
-
-## Multinomial Logistic Regression
-
 ### Partitioning Data
 
 
 ```{r}
-train_idx <- bird_collisions$family %>% createDataPartition(p = 0.80, list = FALSE)
+set.seed(123)
+
+train_idx <- bird_collisions$family %>%
+  createDataPartition(p = 0.80, list = FALSE)
 train <- bird_collisions[train_idx, ]
 test <- bird_collisions[-train_idx, ]
 ```
 
+
+## Multinomial Logistic Regression
 
 ### Fitting the Model
 
@@ -66,8 +64,14 @@ test <- bird_collisions[-train_idx, ]
 #| output: false
 model <- nnet::multinom(family ~ ., data = train) %>%
   stepAIC(direction = "backward", trace = FALSE)
+```
 
-summary(model)
+
+### Model Coefficients
+
+
+```{r}
+coef(model)
 ```
 
 
@@ -79,4 +83,7 @@ pred_classes <- model %>% predict(test)
 
 mean(pred_classes == test$family)
 ```
+
+
+## Poisson Regression
 
