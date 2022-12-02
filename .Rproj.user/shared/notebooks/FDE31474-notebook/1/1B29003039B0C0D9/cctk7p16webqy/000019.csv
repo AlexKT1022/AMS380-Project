@@ -1,4 +1,0 @@
-"0","pred_classes <- model %>% predict(test)"
-"2","Error in model.frame.default(Terms, newdata, na.action = na.omit, xlev = object$xlevels) : 
-  factor PEU2 has new levels 1
-"

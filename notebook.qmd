@@ -5,19 +5,26 @@ format: html
 editor: visual
 ---
 
-## Setup
+## Environment Setup
 
 ### Loading Packages
 
 ```{r}
 #| output: false
-install.packages(c("caret", "hydroTSM", "MASS", "nnet", "tidyverse"))
+install.packages(c("AER", "caret", "hydroTSM", "MASS", "nnet", "tidyverse"))
 
+library(AER)
 library(caret)
 library(hydroTSM)
 library(MASS)
 library(nnet)
 library(tidyverse)
+```
+
+### Setting Seed
+
+```{r}
+set.seed(123)
 ```
 
 ### Loading and Preparing Data
@@ -37,39 +44,80 @@ bird_collisions$family <- ifelse(
 )
 ```
 
+## Multinomial Logistic Regression
+
 ### Partitioning Data
 
 ```{r}
-set.seed(123)
-
 train_idx <- bird_collisions$family %>%
   createDataPartition(p = 0.80, list = FALSE)
 train <- bird_collisions[train_idx, ]
 test <- bird_collisions[-train_idx, ]
 ```
 
-## Multinomial Logistic Regression
-
 ### Fitting the Model
 
 ```{r}
+#| eval: false
 #| output: false
-model <- nnet::multinom(family ~ ., data = train) %>%
+model_multinom <- nnet::multinom(family ~ ., data = train) %>%
   stepAIC(direction = "backward", trace = FALSE)
 ```
 
 ### Model Coefficients
 
 ```{r}
-coef(model)
+#| eval: false
+coef(model_multinom)
 ```
 
 ### Evaluating the Model
 
 ```{r}
-pred_classes <- model %>% predict(test)
+#| eval: false
+pred_classes <- model_multinom %>% predict(test)
 
 mean(pred_classes == test$family)
+```
+
+## Generating Count Data
+
+### Generating Data
+
+```{r}
+counts <- bird_collisions %>%
+  count(date, family, habitat, stratum, locality, sort = TRUE)
+colnames(counts)[6] <- "collisions"
+```
+
+### Preparing Count Data
+
+```{r}
+counts$date <- as.factor(counts$date)
+counts$stratum <- as.factor(counts$stratum)
+counts$family <- as.factor(counts$family)
+counts$habitat <- as.factor(counts$habitat)
+counts$collisions <- as.numeric(counts$collisions)
+```
+
+### Visualizing Count Data
+
+```{r}
+#| eval: false
+ggplot(counts, aes(family, collisions)) + geom_point(aes(colour = family))
+```
+
+```{r}
+#| eval: false
+ggplot(counts, aes(x = family)) + geom_bar()
+```
+
+```{r}
+#| eval: false
+ggplot(counts, aes(collisions, fill = habitat)) +
+  geom_histogram() +
+  scale_x_log10() +
+  facet_grid(habitat ~ ., margins = TRUE, scales = "free_y")
 ```
 
 ## Poisson Regression
@@ -77,5 +125,53 @@ mean(pred_classes == test$family)
 ### Fitting the Model
 
 ```{r}
+model_pois <- glm(collisions ~ ., data = counts, family = poisson)
 
+summary(model_pois)
+```
+
+### Dispersion Test
+
+```{r}
+dispersiontest(model_pois)
+```
+
+The p-value resulting from running an overdispersion test on the Poisson model is less than the significance level (0.05), so we reject the null hypothesis. Therefore, the true dispersion of the count data is greater than 1. As the count data is overdispersed, Quasi-Poisson regression or Negative Binomial regression would yield a more effective model.
+
+```{r}
+mean(counts$collisions)
+var(counts$collisions)
+```
+
+The variance of the count data is significantly greater than the mean, therefore a Negative Binomial model would work best given the count data.
+
+## Negative Binomial Regression
+
+### Fitting the Model
+
+```{r}
+model_neg_binom <- glm.nb(collisions ~ ., data = counts)
+
+summary(model_neg_binom)
+```
+
+### Plotting Residuals
+
+```{r}
+plot(
+  model_neg_binom$fitted.values,
+  model_neg_binom$residuals,
+  col = "orange",
+  pch = 20,
+  xlab = "Collision Count",
+  ylab = "Standatdized Residuals",
+  main = "Negative Binomial"
+)
+abline(0, 0)
+```
+
+### Goodness of Fit
+
+```{r}
+poisgof(model_pois)
 ```

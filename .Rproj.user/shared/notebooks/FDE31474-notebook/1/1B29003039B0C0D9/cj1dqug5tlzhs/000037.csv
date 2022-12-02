@@ -1,1 +1,0 @@
-"0","bird_collisions <- read.csv(""data/bird_collisions.csv"") %>% select(-c(""genus"", ""family""))"
