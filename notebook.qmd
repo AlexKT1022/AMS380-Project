@@ -1,6 +1,10 @@
 ---
 title: "AMS380 Project"
-author: "Alex Takamizawa"
+author:
+  - "Alex Takamizawa"
+  - "Ethan Hoskins"
+  - "Jiarui Zha"
+  - "Tianrun Gou"
 format: html
 editor: visual
 ---
@@ -11,10 +15,13 @@ editor: visual
 
 ```{r}
 #| output: false
-install.packages(c("AER", "caret", "hydroTSM", "MASS", "nnet", "tidyverse"))
+install.packages(
+  c("AER", "caret", "DescTools", "hydroTSM", "MASS", "nnet", "tidyverse")
+)
 
 library(AER)
 library(caret)
+library(DescTools)
 library(hydroTSM)
 library(MASS)
 library(nnet)
@@ -32,15 +39,20 @@ set.seed(123)
 ```{r}
 bird_collisions <- read.csv("data/bird_collisions.csv") %>%
   select(-c("genus", "species")) %>%
-  subset(family != "Laniidae")
+  subset(
+    !family %in% c(
+      "Icteridae",
+      "Icteriidae",
+      "Laniidae", 
+      "Polioptilidae",
+      "Sittidae",
+      "Tyrannidae",
+      "Vireonidae"
+    )
+  )
 bird_collisions$date <- time2season(
-  as.Date(bird_collisions$date), 
+  as.Date(bird_collisions$date),
   out.fmt = "seasons"
-)
-bird_collisions$family <- ifelse(
-  bird_collisions$family == "Icteriidae",
-  "Icteridae",
-  bird_collisions$family
 )
 ```
 
@@ -50,7 +62,7 @@ bird_collisions$family <- ifelse(
 
 ```{r}
 train_idx <- bird_collisions$family %>%
-  createDataPartition(p = 0.80, list = FALSE)
+  createDataPartition(p = 0.70, list = FALSE)
 train <- bird_collisions[train_idx, ]
 test <- bird_collisions[-train_idx, ]
 ```
@@ -58,23 +70,14 @@ test <- bird_collisions[-train_idx, ]
 ### Fitting the Model
 
 ```{r}
-#| eval: false
-#| output: false
-model_multinom <- nnet::multinom(family ~ ., data = train) %>%
-  stepAIC(direction = "backward", trace = FALSE)
-```
+model_multinom <- multinom(family ~ ., data = train)
 
-### Model Coefficients
-
-```{r}
-#| eval: false
-coef(model_multinom)
+summary(model_multinom)
 ```
 
 ### Evaluating the Model
 
 ```{r}
-#| eval: false
 pred_classes <- model_multinom %>% predict(test)
 
 mean(pred_classes == test$family)
@@ -86,35 +89,33 @@ mean(pred_classes == test$family)
 
 ```{r}
 counts <- bird_collisions %>%
-  count(date, family, habitat, stratum, locality, sort = TRUE)
-colnames(counts)[6] <- "collisions"
+  count(date, locality, family, flight_call, habitat, stratum, sort = TRUE)
 ```
 
 ### Preparing Count Data
 
 ```{r}
-counts$date <- as.factor(counts$date)
-counts$stratum <- as.factor(counts$stratum)
-counts$family <- as.factor(counts$family)
-counts$habitat <- as.factor(counts$habitat)
-counts$collisions <- as.numeric(counts$collisions)
+# counts$date <- as.factor(counts$date)
+# counts$locality <- as.factor(counts$locality)
+# counts$family <- as.factor(counts$family)
+# counts$flight_call <- as.factor(counts$flight_call)
+# counts$habitat <- as.factor(counts$habitat)
+# counts$stratum <- as.factor(counts$stratum)
+# counts$n <- as.numeric(counts$n)
 ```
 
 ### Visualizing Count Data
 
 ```{r}
-#| eval: false
-ggplot(counts, aes(family, collisions)) + geom_point(aes(colour = family))
+ggplot(counts, aes(family, n)) + geom_point(aes(colour = family))
 ```
 
 ```{r}
-#| eval: false
 ggplot(counts, aes(x = family)) + geom_bar()
 ```
 
 ```{r}
-#| eval: false
-ggplot(counts, aes(collisions, fill = habitat)) +
+ggplot(counts, aes(n, fill = habitat)) +
   geom_histogram() +
   scale_x_log10() +
   facet_grid(habitat ~ ., margins = TRUE, scales = "free_y")
@@ -125,7 +126,7 @@ ggplot(counts, aes(collisions, fill = habitat)) +
 ### Fitting the Model
 
 ```{r}
-model_pois <- glm(collisions ~ ., data = counts, family = poisson)
+model_pois <- glm(n ~ ., data = counts, family = poisson)
 
 summary(model_pois)
 ```
@@ -139,8 +140,8 @@ dispersiontest(model_pois)
 The p-value resulting from running an overdispersion test on the Poisson model is less than the significance level (0.05), so we reject the null hypothesis. Therefore, the true dispersion of the count data is greater than 1. As the count data is overdispersed, Quasi-Poisson regression or Negative Binomial regression would yield a more effective model.
 
 ```{r}
-mean(counts$collisions)
-var(counts$collisions)
+mean(counts$n)
+var(counts$n)
 ```
 
 The variance of the count data is significantly greater than the mean, therefore a Negative Binomial model would work best given the count data.
@@ -150,7 +151,7 @@ The variance of the count data is significantly greater than the mean, therefore
 ### Fitting the Model
 
 ```{r}
-model_neg_binom <- glm.nb(collisions ~ ., data = counts)
+model_neg_binom <- glm.nb(n ~ ., data = counts)
 
 summary(model_neg_binom)
 ```
@@ -161,7 +162,6 @@ summary(model_neg_binom)
 plot(
   model_neg_binom$fitted.values,
   model_neg_binom$residuals,
-  col = "orange",
   pch = 20,
   xlab = "Collision Count",
   ylab = "Standatdized Residuals",
@@ -170,8 +170,8 @@ plot(
 abline(0, 0)
 ```
 
-### Goodness of Fit
+### Evaluating Negative Binomial Model
 
 ```{r}
-poisgof(model_pois)
+PseudoR2(model_neg_binom)
 ```
